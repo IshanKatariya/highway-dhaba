@@ -4,40 +4,71 @@ const PHRASES = [
   "बुरी नज़र वाले तेरा मुँह काला",
   "HORN OK PLEASE",
   "USE DIPPER AT NIGHT",
+  "ओवरटेक मत कर भाई",
+  "अभी सफर बाकी है",
+  "चाय गरम है",
   "रात में दिप्पर लगाओ",
   "मिले सुर मेरा तुम्हारा",
   "HIGHWAY DHABA",
 ];
 
+const SEP = "✦";
+
 export default function HornMarquee() {
+  const repeated = [...PHRASES, ...PHRASES, ...PHRASES];
+
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-50 text-[#e8a13d]"
+      className="fixed inset-x-0 bottom-0 z-50 overflow-hidden"
       aria-hidden="true"
       style={{
-        background: "#1a120b",
-        borderTop: "3px double #a5651f",
-        borderBottom: "3px double #a5651f",
-        boxShadow: "0 -4px 12px rgba(0,0,0,0.5)",
+        background: "#0c0a07",
+        borderTop: "1px solid rgba(184,134,11,0.5)",
+        height: "36px",
+        display: "flex",
+        alignItems: "center",
       }}
     >
-      <div className="overflow-hidden px-5 py-3">
-        <div
-          className="ticker-track flex items-center whitespace-nowrap gap-4 text-[13px] uppercase font-bold"
-          style={{ fontFamily: "var(--font-russo), sans-serif" }}
-        >
-          {[...PHRASES, ...PHRASES].map((phrase, index) => (
-            <span key={index} className="flex items-center gap-4">
-              <span
-                className="text-[#e8a13d]"
-                style={{ textShadow: "0 0 6px rgba(232,161,61,0.35)" }}
-              >
-                {phrase}
-              </span>
-              <span className="text-[#a5651f] text-[14px] select-none">✦</span>
+      {/* Subtle top edge glow */}
+      <div
+        className="absolute inset-x-0 top-0"
+        style={{
+          height: "1px",
+          background:
+            "linear-gradient(90deg,transparent 0%,rgba(184,134,11,0.6) 20%,rgba(245,166,35,0.9) 50%,rgba(184,134,11,0.6) 80%,transparent 100%)",
+        }}
+      />
+
+      <div
+        className="ticker-track flex items-center whitespace-nowrap will-change-transform"
+        style={{ fontFamily: "var(--font-russo), sans-serif" }}
+      >
+        {repeated.map((phrase, i) => (
+          <span key={i} className="inline-flex items-center">
+            <span
+              style={{
+                fontSize: "11px",
+                letterSpacing: "0.3em",
+                color: "#c89535",
+                textTransform: "uppercase",
+                padding: "0 20px",
+                fontWeight: 400,
+              }}
+            >
+              {phrase}
             </span>
-          ))}
-        </div>
+            <span
+              style={{
+                fontSize: "8px",
+                color: "rgba(184,134,11,0.55)",
+                padding: "0 4px",
+                flexShrink: 0,
+              }}
+            >
+              {SEP}
+            </span>
+          </span>
+        ))}
       </div>
     </div>
   );

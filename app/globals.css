@@ -172,3 +172,21 @@ body {
     stroke-dashoffset: 0;
   }
 }
+
+/* ── Ticker marquee ──────────────────────── */
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}
+
+.ticker-track {
+  animation: ticker-scroll 40s linear infinite;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
