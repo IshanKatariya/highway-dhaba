@@ -21,7 +21,7 @@ const itemVariants: any = {
 export default function HeroTitle() {
   return (
     <motion.div
-      className="flex flex-col items-center text-center gap-4 px-4"
+      className="flex flex-col items-center text-center gap-2 px-4"
       variants={containerVariants}
       initial="hidden"
       animate="visible"

@@ -23,7 +23,7 @@ export default function HornMarquee() {
     >
       <div className="overflow-hidden px-5 py-3">
         <div
-          className="ticker-track flex items-center whitespace-nowrap gap-4 text-[13px] uppercase tracking-[0.15em] font-bold"
+          className="ticker-track flex items-center whitespace-nowrap gap-4 text-[13px] uppercase font-bold"
           style={{ fontFamily: "var(--font-russo), sans-serif" }}
         >
           {[...PHRASES, ...PHRASES].map((phrase, index) => (
