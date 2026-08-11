@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════
+   HIGHWAY DHABA — Global Styles
+   Truck-art desi palette + film grain
+   ══════════════════════════════════════════ */
+
+/* ── Truck-Art Design Tokens ─────────────── */
+@theme inline {
+  --color-marigold: #F5A623;
+  --color-saffron: #FF9933;
+  --color-maroon: #8B1A1A;
+  --color-crimson: #C0392B;
+  --color-teal: #2AABB3;
+  --color-brass: #B8860B;
+  --color-amber: #E8A020;
+  --color-cream: #FFF9F0;
+  --color-midnight: #0A0805;
+  --color-ink: #1A1208;
+
+  --font-display: var(--font-yatra);
+  --font-stencil: var(--font-russo);
+  --font-body: var(--font-baloo);
+}
+
+:root {
+  --background: #0A0805;
+  --foreground: #FFF9F0;
+
+  /* Grain filter id */
+  --grain-opacity: 1;
+}
+
+/* ── Reset & Base ────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: #0A0805;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), 'Baloo 2', sans-serif;
+  overflow-x: hidden;
+  min-height: 100dvh;
+}
+
+/* ── Film Grain Overlay ──────────────────── */
+.film-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+}
+
+/* ── Scrollbar ───────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0805;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 166, 35, 0.35);
+  border-radius: 2px;
+}
+
+/* ── Selection ───────────────────────────── */
+::selection {
+  background: rgba(245, 166, 35, 0.35);
+  color: #FFF9F0;
+}
+
+/* ── Truck Art Marquee ───────────────────── */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-track {
+  animation: marquee-scroll 35s linear infinite;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* ── Garland Sway ────────────────────────── */
+@keyframes garland-sway {
+  0% {
+    transform: translateX(-50%) rotate(-1.5deg) translateY(0px);
+  }
+
+  50% {
+    transform: translateX(-50%) rotate(0deg) translateY(3px);
+  }
+
+  100% {
+    transform: translateX(-50%) rotate(1.5deg) translateY(0px);
+  }
+}
+
+/* ── Diya pulse ──────────────────────────── */
+@keyframes diya-pulse {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 8px #E8A020) drop-shadow(0 0 20px rgba(232, 160, 32, 0.5));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 16px #FF9933) drop-shadow(0 0 40px rgba(255, 153, 51, 0.7));
+  }
+}
+
+/* ── Ping pulse ──────────────────────────── */
+@keyframes ping-dot {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  75%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* ── Page load rise ──────────────────────── */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.7s ease forwards;
+}
+
+/* ── Truck-art ornament SVG stroke draw ─── */
+@keyframes stroke-draw {
+  from {
+    stroke-dashoffset: 1000;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
