@@ -7,14 +7,27 @@ import { motion, AnimatePresence } from "framer-motion";
    FALLBACK TRACKS (used when Spotify API is unavailable)
 ───────────────────────────────────────── */
 const FALLBACK_TRACKS = [
-  { id: "1", title: "Safar Ka Hi Tha",  artist: "Mohit Chauhan",   src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", art: "/image/cover_safar.png", spotifyUrl: null },
-  { id: "2", title: "Tere Bina",        artist: "A.R. Rahman",     src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", art: "/image/cover_safar.png", spotifyUrl: null },
-  { id: "3", title: "Phir Le Aaya Dil", artist: "Arijit Singh",    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", art: "/image/cover_safar.png", spotifyUrl: null },
-  { id: "4", title: "Yeh Dooriyan",     artist: "Mohit Chauhan",   src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", art: "/image/cover_safar.png", spotifyUrl: null },
-  { id: "5", title: "Choo Lo",          artist: "The Local Train", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", art: "/image/cover_safar.png", spotifyUrl: null },
-  { id: "6", title: "Iktara",           artist: "Amit Trivedi",    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", art: "/image/cover_safar.png", spotifyUrl: null },
-  { id: "7", title: "Tum Se Hi",        artist: "Mohit Chauhan",   src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3", art: "/image/cover_safar.png", spotifyUrl: null },
+  { id: "1", title: "Safar Ka Hi Tha",  artist: "Mohit Chauhan",   src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null },
+  { id: "2", title: "Tere Bina",        artist: "A.R. Rahman",     src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null },
+  { id: "3", title: "Phir Le Aaya Dil", artist: "Arijit Singh",    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null },
+  { id: "4", title: "Yeh Dooriyan",     artist: "Mohit Chauhan",   src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null },
+  { id: "5", title: "Choo Lo",          artist: "The Local Train", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null },
+  { id: "6", title: "Iktara",           artist: "Amit Trivedi",    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null },
+  { id: "7", title: "Tum Se Hi",        artist: "Mohit Chauhan",   src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null },
 ];
+
+/* ─────────────────────────────────────────
+   YOUTUBE IFRAME API — minimal ambient types
+───────────────────────────────────────── */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type YTPlayer = any;
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    YT: any;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
 import type { SpotifyTrack } from "@/app/api/spotify/route";
 
 /* ─────────────────────────────────────────
@@ -613,8 +626,18 @@ export default function MusicPlayer() {
   const [volume, setVolume] = useState(0.75);
   const [showList, setShowList] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const ytPlayerRef = useRef<YTPlayer | null>(null);
+  const [ytReady, setYtReady] = useState(
+    () => typeof window !== "undefined" && !!window.YT?.Player
+  );
 
   const track = tracks[idx] ?? null;
+  // Self-hosted files (when present) take priority over the YouTube match.
+  const engine: "audio" | "youtube" | null = track?.src
+    ? "audio"
+    : track?.youtubeId
+    ? "youtube"
+    : null;
 
   /* ── Fetch Spotify playlist; fall back to hardcoded tracks if unavailable ── */
   useEffect(() => {
@@ -641,7 +664,64 @@ export default function MusicPlayer() {
     return () => { cancelled = true; };
   }, []);
 
-  /* ── Audio events ── */
+  /* ── Load the YouTube IFrame API once ── */
+  useEffect(() => {
+    if (window.YT?.Player) return;
+    const prevCallback = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      prevCallback?.();
+      setYtReady(true);
+    };
+    if (!document.getElementById("youtube-iframe-api")) {
+      const tag = document.createElement("script");
+      tag.id = "youtube-iframe-api";
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+    }
+  }, []);
+
+  /* ── Create the hidden YouTube player once the API is ready ── */
+  useEffect(() => {
+    if (!ytReady || ytPlayerRef.current) return;
+    ytPlayerRef.current = new window.YT.Player("yt-audio-player", {
+      height: "0",
+      width: "0",
+      playerVars: { autoplay: 0, controls: 0, disablekb: 1, playsinline: 1 },
+      events: {
+        onStateChange: (e: { data: number }) => {
+          if (e.data === window.YT.PlayerState.PLAYING) setPlaying(true);
+          if (e.data === window.YT.PlayerState.PAUSED) setPlaying(false);
+          if (e.data === window.YT.PlayerState.ENDED) {
+            setIdx((i) => (i + 1) % Math.max(tracks.length, 1));
+            setPlaying(true);
+          }
+        },
+        // Video unembeddable/removed — don't get stuck, move on.
+        onError: () => setIdx((i) => (i + 1) % Math.max(tracks.length, 1)),
+      },
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ytReady]);
+
+  /* ── Load the current track into whichever engine plays it ── */
+  useEffect(() => {
+    if (!track) return;
+    if (engine === "audio") {
+      const a = audioRef.current;
+      if (!a || !track.src) return;
+      a.src = track.src;
+      a.load();
+      if (playing) a.play().catch(() => setPlaying(false));
+    } else if (engine === "youtube") {
+      const p = ytPlayerRef.current;
+      if (!p || !track.youtubeId || typeof p.loadVideoById !== "function") return;
+      if (playing) p.loadVideoById(track.youtubeId);
+      else p.cueVideoById(track.youtubeId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track?.id, engine, ytReady]);
+
+  /* ── Audio-tag events (self-hosted engine only) ── */
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
@@ -650,7 +730,10 @@ export default function MusicPlayer() {
       pause: () => setPlaying(false),
       timeupdate: () => setCurrentTime(a.currentTime),
       loadedmetadata: () => setDuration(a.duration),
-      ended: () => setIdx((i) => (i + 1) % Math.max(tracks.length, 1)),
+      ended: () => {
+        setIdx((i) => (i + 1) % Math.max(tracks.length, 1));
+        setPlaying(true);
+      },
     };
     Object.entries(handlers).forEach(([ev, fn]) => a.addEventListener(ev, fn));
     return () =>
@@ -660,25 +743,52 @@ export default function MusicPlayer() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks.length]);
 
+  /* ── YouTube engine has no timeupdate event — poll instead ── */
+  useEffect(() => {
+    if (engine !== "youtube") return;
+    const id = window.setInterval(() => {
+      const p = ytPlayerRef.current;
+      if (!p || typeof p.getCurrentTime !== "function") return;
+      setCurrentTime(p.getCurrentTime());
+      const d = p.getDuration?.();
+      if (d) setDuration(d);
+    }, 250);
+    return () => window.clearInterval(id);
+  }, [engine]);
+
   /* ── Volume sync ── */
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
+    if (ytPlayerRef.current?.setVolume) ytPlayerRef.current.setVolume(volume * 100);
   }, [volume]);
 
   const toggle = () => {
-    const a = audioRef.current;
-    if (!a) return;
-    playing ? a.pause() : a.play().catch(() => setPlaying(false));
+    if (engine === "audio") {
+      const a = audioRef.current;
+      if (!a) return;
+      if (playing) a.pause();
+      else a.play().catch(() => setPlaying(false));
+    } else if (engine === "youtube") {
+      const p = ytPlayerRef.current;
+      if (!p) return;
+      if (playing) p.pauseVideo?.();
+      else p.playVideo?.();
+    }
   };
 
   const handleSeek = useCallback(
     (r: number) => {
-      const a = audioRef.current;
-      if (!a || !duration) return;
-      a.currentTime = r * duration;
+      if (!duration) return;
+      if (engine === "audio") {
+        const a = audioRef.current;
+        if (!a) return;
+        a.currentTime = r * duration;
+      } else if (engine === "youtube") {
+        ytPlayerRef.current?.seekTo?.(r * duration, true);
+      }
       setCurrentTime(r * duration);
     },
-    [duration]
+    [duration, engine]
   );
 
   const selectTrack = (i: number) => {
@@ -706,6 +816,11 @@ export default function MusicPlayer() {
   return (
     <>
       <audio ref={audioRef} preload="metadata" />
+      <div
+        id="yt-audio-player"
+        style={{ position: "fixed", width: 0, height: 0, overflow: "hidden", pointerEvents: "none" }}
+        aria-hidden
+      />
 
       <motion.div
         className="fixed left-1/2 z-[60] -translate-x-1/2"
