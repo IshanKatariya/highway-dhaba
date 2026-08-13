@@ -7,13 +7,13 @@ import { motion, AnimatePresence } from "framer-motion";
    FALLBACK TRACKS (used when Spotify API is unavailable)
 ───────────────────────────────────────── */
 const FALLBACK_TRACKS = [
-  { id: "1", title: "Safar Ka Hi Tha",  artist: "Mohit Chauhan",   src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
-  { id: "2", title: "Tere Bina",        artist: "A.R. Rahman",     src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
-  { id: "3", title: "Phir Le Aaya Dil", artist: "Arijit Singh",    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
-  { id: "4", title: "Yeh Dooriyan",     artist: "Mohit Chauhan",   src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
-  { id: "5", title: "Choo Lo",          artist: "The Local Train", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
-  { id: "6", title: "Iktara",           artist: "Amit Trivedi",    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
-  { id: "7", title: "Tum Se Hi",        artist: "Mohit Chauhan",   src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
+  { id: "1", title: "Safar Ka Hi Tha", artist: "Mohit Chauhan", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
+  { id: "2", title: "Tere Bina", artist: "A.R. Rahman", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
+  { id: "3", title: "Phir Le Aaya Dil", artist: "Arijit Singh", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
+  { id: "4", title: "Yeh Dooriyan", artist: "Mohit Chauhan", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
+  { id: "5", title: "Choo Lo", artist: "The Local Train", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
+  { id: "6", title: "Iktara", artist: "Amit Trivedi", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
+  { id: "7", title: "Tum Se Hi", artist: "Mohit Chauhan", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3", art: "/image/cover_safar.png", spotifyUrl: "", album: "", durationMs: 0, youtubeId: null, previewUrl: null },
 ];
 
 /* ─────────────────────────────────────────
@@ -145,6 +145,232 @@ function SeekBar({
 /* ─────────────────────────────────────────
    VOLUME KNOB
 ───────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   MOBILE VOLUME — tap-to-reveal lantern slider
+───────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   MOBILE VOLUME — tap-to-reveal, div-bar icon
+───────────────────────────────────────── */
+function MobileVolumeLantern({
+  volume,
+  onChange,
+}: {
+  volume: number;
+  onChange: (v: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const DOTS = 10;
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onDown(e: PointerEvent) {
+      if (
+        wrapRef.current &&
+        !wrapRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", onDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+    };
+  }, [open]);
+
+  const setFromClientY = useCallback(
+    (clientY: number) => {
+      if (!trackRef.current) return;
+
+      const rect = trackRef.current.getBoundingClientRect();
+      const r = 1 - (clientY - rect.top) / rect.height;
+
+      onChange(Math.max(0, Math.min(1, r)));
+    },
+    [onChange]
+  );
+
+  function onTrackPointerDown(e: React.PointerEvent) {
+    setFromClientY(e.clientY);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }
+
+  function onTrackPointerMove(e: React.PointerEvent) {
+    if (e.buttons !== 1) return;
+    setFromClientY(e.clientY);
+  }
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{
+        position: "relative",
+        flexShrink: 0,
+      }}
+    >
+      {/* Volume popup */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 8,
+              scale: 0.9,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            exit={{
+              opacity: 0,
+              y: 8,
+              scale: 0.9,
+            }}
+            transition={{
+              duration: 0.16,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            style={{
+              position: "absolute",
+              bottom: "calc(100% + 10px)",
+              left: "50%",
+              transform: "translateX(-50%)",
+
+              width: 42,
+              padding: "12px 0",
+
+              borderRadius: 18,
+
+              background: "rgba(10,8,5,0.94)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+
+              border: "1px solid rgba(245,166,35,0.18)",
+
+              boxShadow:
+                "0 10px 40px rgba(0,0,0,0.6)",
+
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 8,
+
+              zIndex: 50,
+            }}
+          >
+            {/* Percentage */}
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: "#f5a623",
+                fontFamily: "auto",
+              }}
+            >
+              {Math.round(volume * 100)}
+            </span>
+
+            {/* Vertical volume slider */}
+            <div
+              ref={trackRef}
+              onPointerDown={onTrackPointerDown}
+              onPointerMove={onTrackPointerMove}
+              style={{
+                position: "relative",
+
+                width: 28,
+                height: 110,
+
+                display: "flex",
+                flexDirection: "column-reverse",
+                alignItems: "center",
+                justifyContent: "space-between",
+
+                cursor: "pointer",
+                touchAction: "none",
+              }}
+            >
+              {Array.from({ length: DOTS }).map((_, i) => {
+                const lit =
+                  i / (DOTS - 1) <= volume;
+
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      width: lit ? 7 : 4,
+                      height: lit ? 7 : 4,
+
+                      borderRadius: "50%",
+
+                      background: lit
+                        ? "radial-gradient(circle at 35% 30%, #ffd700, #f5a623)"
+                        : "rgba(255,255,255,0.12)",
+
+                      boxShadow: lit
+                        ? "0 0 6px rgba(245,166,35,0.8)"
+                        : "none",
+
+                      transition:
+                        "all 0.12s",
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* SIMPLE VOLUME BUTTON */}
+      <button
+  type="button"
+  onClick={() => setOpen((o) => !o)}
+  aria-label="Volume"
+  aria-expanded={open}
+  style={{
+    width: 40,
+    height: 40,
+    padding: 0,
+    borderRadius: 8,
+
+    background: open
+      ? "rgba(245,166,35,0.12)"
+      : "transparent",
+
+    border: open
+      ? "1px solid rgba(245,166,35,0.35)"
+      : "1px solid transparent",
+
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+
+    cursor: "pointer",
+
+    WebkitTapHighlightColor: "transparent",
+  }}
+>
+  <img
+    src="https://img.icons8.com/ios/50/medium-volume--v1.png"
+    alt="Volume"
+    width={22}
+    height={22}
+    style={{
+      display: "block",
+      filter:
+        "brightness(0) saturate(100%) invert(69%) sepia(75%) saturate(800%) hue-rotate(355deg) brightness(102%)",
+    }}
+  />
+</button>
+    </div>
+  );
+}
 function VolumeKnob({
   volume,
   onChange,
@@ -355,7 +581,7 @@ function SongList({
               onClick={() => onSelect(i)}
               className="w-full flex items-center gap-4 px-5 py-3 text-left transition-all"
               style={{
-                
+
                 background: active ? "rgba(245,166,35,0.06)" : "transparent",
                 borderLeft: active
                   ? "2px solid #f5a623"
@@ -645,10 +871,10 @@ export default function MusicPlayer() {
   const engine: "audio" | "youtube" | null = track?.src
     ? "audio"
     : track?.youtubeId && !ytApiFailed
-    ? "youtube"
-    : track?.previewUrl
-    ? "audio"
-    : null;
+      ? "youtube"
+      : track?.previewUrl
+        ? "audio"
+        : null;
   const audioSrc = track?.src ?? track?.previewUrl ?? null;
 
   /* ── Fetch Spotify playlist; fall back to hardcoded tracks if unavailable ── */
@@ -762,7 +988,7 @@ export default function MusicPlayer() {
         },
       },
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ytReady, ytPlayerReady, ytApiFailed]);
 
   /* ── Load the current track into whichever engine plays it ── */
@@ -803,7 +1029,7 @@ export default function MusicPlayer() {
       if (playing) p.loadVideoById(track.youtubeId);
       else p.cueVideoById(track.youtubeId);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track?.id, engine, ytReady, ytPlayerReady, audioSrc]);
 
   /* ── Audio-tag events (self-hosted engine only) ── */
@@ -833,7 +1059,7 @@ export default function MusicPlayer() {
       Object.entries(handlers).forEach(([ev, fn]) =>
         a.removeEventListener(ev, fn)
       );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks.length]);
 
   /* ── YouTube engine has no timeupdate event — poll instead ── */
@@ -941,10 +1167,140 @@ export default function MusicPlayer() {
     setShowList(false);
   };
 
-  
+
 
   return (
     <>
+      <style jsx>{`
+        /* Mobile-only responsive overrides. Desktop styles are untouched. */
+        /* Mobile-only responsive overrides. Desktop styles are untouched. */
+        .volume-mobile-only { display: none; }
+@media (max-width: 640px) {
+  .volume-desktop-only { display: none !important; }
+  .volume-mobile-only { display: flex !important; }
+}
+        .music-player-mobile-actions {
+          display: contents;
+        }
+        @media (max-width: 640px) {
+          .music-player-shell {
+            bottom: 16px !important;
+            width: calc(100vw - 20px) !important;
+            max-width: none !important;
+          }
+          .music-player-pill {
+            display: grid !important;
+            grid-template-columns: 50px minmax(0, 1fr) !important;
+            grid-template-rows: auto auto !important;
+            column-gap: 10px !important;
+            row-gap: 8px !important;
+            padding: 10px 12px !important;
+            border-radius: 18px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+
+          /* TOP: only album art + song information */
+          .music-player-art {
+            width: 50px !important;
+            height: 50px !important;
+            grid-column: 1 !important;
+            grid-row: 1 !important;
+          }
+          .music-player-info {
+            min-width: 0 !important;
+            grid-column: 2 !important;
+            grid-row: 1 !important;
+            align-self: center !important;
+          }
+          .music-player-info h2 {
+            font-size: 13px !important;
+          }
+          .music-player-info p {
+            font-size: 9px !important;
+          }
+          .music-player-info > div {
+            margin-top: 3px !important;
+          }
+
+          /* BOTTOM: ALL playback/action controls */
+          .music-player-mobile-actions {
+            display: grid !important;
+            grid-column: 1 / -1 !important;
+            grid-row: 2 !important;
+            grid-template-columns: 1fr auto 1fr !important;
+            align-items: center !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            padding-top: 2px !important;
+            height:10vh;
+          }
+          .music-player-controls {
+            grid-column: 2 !important;
+            grid-row: 1 !important;
+            justify-self: center !important;
+            gap: 4px !important;
+          }
+          .music-player-controls button:first-child,
+          .music-player-controls button:last-child {
+            width: 30px !important;
+            height: 30px !important;
+          }
+          .music-player-controls button:nth-child(2) {
+            width: 44px !important;
+            height: 44px !important;
+          }
+          .music-player-controls svg {
+            width: 16px !important;
+            height: 16px !important;
+          }
+          .music-player-divider {
+            display: none !important;
+          }
+          .music-player-list-toggle {
+            grid-column: 1 !important;
+            grid-row: 1 !important;
+            justify-self: start !important;
+            width: 32px !important;
+            height: 32px !important;
+          }
+          .music-player-volume {
+            grid-column: 3 !important;
+            grid-row: 1 !important;
+            justify-self: end !important;
+            transform: scale(0.78) !important;
+            transform-origin: right center !important;
+            height: 36px !important;
+          }
+        }
+        @media (max-width: 380px) {
+          .music-player-pill {
+            grid-template-columns: 68px minmax(0, 1fr) !important;
+            column-gap: 8px !important;
+            padding: 8px 9px !important;
+          }
+          .music-player-art {
+            width: 44px !important;
+            height: 44px !important;
+          }
+          .music-player-controls {
+            gap: 2px !important;
+          }
+          .music-player-controls button:first-child,
+          .music-player-controls button:last-child {
+            width: 27px !important;
+            height: 27px !important;
+          }
+          .music-player-controls button:nth-child(2) {
+            width: 40px !important;
+            height: 40px !important;
+          }
+          .music-player-list-toggle {
+            width: 29px !important;
+            height: 29px !important;
+          }
+        }
+      `}</style>
       <audio ref={audioRef} preload="metadata" />
       <div
         id="yt-audio-player"
@@ -953,324 +1309,333 @@ export default function MusicPlayer() {
       />
 
       {loading ? (
-      <motion.div
-        className="fixed left-1/2 z-[60] -translate-x-1/2"
-        style={{ bottom: 100, width: "min(860px, 94vw)" }}
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <LoadingSkeleton />
-      </motion.div>
-    ) : (
-
-      <motion.div
-        className="fixed left-1/2 z-[60] -translate-x-1/2"
-        style={{ bottom: 100, width: "min(860px, 94vw)" }}
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      >
-        {/* ── Song list drawer ── */}
-        <AnimatePresence>
-          {showList && (
-            <SongList
-              tracks={tracks}
-              currentIdx={idx}
-              isPlaying={playing}
-              onSelect={selectTrack}
-              onClose={() => setShowList(false)}
-            />
-          )}
-        </AnimatePresence>
-
-        {/* ── Pill player ── */}
-        <div
-          className="flex items-center gap-4 px-4 py-3"
-          style={{
-            background: "rgba(255,255,255,0.02)",
-            backdropFilter: "blur(4px)",
-            WebkitBackdropFilter: "blur(4px)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 9999,
-            boxShadow:
-              "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
-          }}
+        <motion.div
+          className="music-player-shell fixed left-1/2 z-[60] -translate-x-1/2"
+          style={{ bottom: 100, width: "min(860px, 94vw)" }}
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* ── Circular album art (real Spotify cover) ── */}
-          <motion.div
-            className="flex-shrink-0 rounded-full overflow-hidden"
-            style={{
-              width: 64,
-              height: 64,
-              border: playing
-                ? "2px solid rgba(245,166,35,0.7)"
-                : "2px solid rgba(255,255,255,0.1)",
-              boxShadow: playing
-                ? "0 0 16px rgba(245,166,35,0.35)"
-                : "none",
-              transition: "border-color 0.4s, box-shadow 0.4s",
-            }}
-            animate={{ rotate: playing ? 360 : 0 }}
-            transition={
-              playing
-                ? { duration: 10, ease: "linear", repeat: Infinity }
-                : { duration: 0 }
-            }
-          >
-            {track?.art ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={track.art}
-                alt={track.title}
-                width={64}
-                height={64}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                referrerPolicy="no-referrer"
+          <LoadingSkeleton />
+        </motion.div>
+      ) : (
+
+        <motion.div
+          className="music-player-shell fixed left-1/2 z-[60] -translate-x-1/2"
+          style={{ bottom: 100, width: "min(860px, 94vw)" }}
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {/* ── Song list drawer ── */}
+          <AnimatePresence>
+            {showList && (
+              <SongList
+                tracks={tracks}
+                currentIdx={idx}
+                isPlaying={playing}
+                onSelect={selectTrack}
+                onClose={() => setShowList(false)}
               />
-            ) : (
+            )}
+          </AnimatePresence>
+
+          {/* ── Pill player ── */}
+          <div
+            className="music-player-pill flex items-center gap-4 px-4 py-3"
+            style={{
+              background: "rgba(255,255,255,0.02)",
+              backdropFilter: "blur(4px)",
+              WebkitBackdropFilter: "blur(4px)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 9999,
+              boxShadow:
+                "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+            }}
+          >
+            {/* ── Circular album art (real Spotify cover) ── */}
+            <motion.div
+              className="music-player-art flex-shrink-0 rounded-full overflow-hidden"
+              style={{
+                width: 64,
+                height: 64,
+                border: playing
+                  ? "2px solid rgba(245,166,35,0.7)"
+                  : "2px solid rgba(255,255,255,0.1)",
+                boxShadow: playing
+                  ? "0 0 16px rgba(245,166,35,0.35)"
+                  : "none",
+                transition: "border-color 0.4s, box-shadow 0.4s",
+              }}
+              animate={{ rotate: playing ? 360 : 0 }}
+              transition={
+                playing
+                  ? { duration: 10, ease: "linear", repeat: Infinity }
+                  : { duration: 0 }
+              }
+            >
+              {track?.art ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={track.art}
+                  alt={track.title}
+                  width={64}
+                  height={64}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    background:
+                      "radial-gradient(circle at 35% 35%, #3d2b00, #1a120b)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 24,
+                  }}
+                >
+                  🎵
+                </div>
+              )}
+            </motion.div>
+
+            {/* ── Track info + seek ── */}
+            <div className="music-player-info flex-1 min-w-0 flex flex-col gap-0.5">
+              {/* Title */}
+              <AnimatePresence mode="wait">
+                <motion.h2
+                  key={`t${idx}`}
+                  style={{
+                    fontSize: "clamp(14px,2vw,18px)",
+                    fontWeight: 700,
+                    color: "#fff9f0",
+                    fontFamily: "auto",
+                    letterSpacing: "0.01em",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    lineHeight: 1.2,
+                  }}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -6 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  {track?.title ?? "—"}
+                </motion.h2>
+              </AnimatePresence>
+
+              {/* Artist */}
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={`a${idx}`}
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: "0.12em",
+                    color: "#b8860b",
+                    fontFamily: "auto",
+                    fontWeight: 600,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {track?.artist ?? "—"}
+                </motion.p>
+              </AnimatePresence>
+
+              {/* Seek bar + time */}
+              <div className="flex items-center gap-2 mt-1.5">
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: "rgba(255,249,240,0.45)",
+                    fontFamily: "auto",
+                    minWidth: 28,
+                  } as React.CSSProperties}
+                >
+                  {fmt(currentTime)}
+                </span>
+                <div className="flex-1">
+                  <SeekBar
+                    current={currentTime}
+                    duration={duration}
+                    onSeek={handleSeek}
+                  />
+                </div>
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: "rgba(255,249,240,0.45)",
+                    fontFamily: "auto",
+                    minWidth: 28,
+                    textAlign: "right",
+                  } as React.CSSProperties}
+                >
+                  {fmt(duration)}
+                </span>
+              </div>
+            </div>
+
+            {/* ── Mobile action row wrapper ── */}
+            <div className="music-player-mobile-actions">
+              {/* ── Controls ── */}
+              <div className="music-player-controls flex items-center gap-2 flex-shrink-0">
+                {/* Prev */}
+                <button
+                  onClick={() => {
+                    setIdx((i) => (i - 1 + tracks.length) % tracks.length);
+                    setPlaying(true);
+                  }}
+                  className="flex items-center justify-center rounded-full transition-all"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    color: "rgba(184,134,11,0.7)",
+                    background: "transparent",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.color = "#f5a623";
+                    (e.currentTarget as HTMLElement).style.background =
+                      "rgba(255,255,255,0.06)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.color =
+                      "rgba(184,134,11,0.7)";
+                    (e.currentTarget as HTMLElement).style.background =
+                      "transparent";
+                  }}
+                  aria-label="Previous"
+                >
+                  <Prev />
+                </button>
+
+                {/* Play / Pause — gold ring circle */}
+                <motion.button
+                  onClick={toggle}
+                  className="flex items-center justify-center rounded-full flex-shrink-0"
+                  style={{
+                    width: 52,
+                    height: 52,
+                    border: "1.5px solid #f5a623",
+                    color: "#f5a623",
+                    background: playing
+                      ? "rgba(245,166,35,0.08)"
+                      : "transparent",
+                    boxShadow: playing
+                      ? "0 0 20px rgba(245,166,35,0.4)"
+                      : "0 0 8px rgba(245,166,35,0.15)",
+                    transition: "background 0.3s, box-shadow 0.3s",
+                  }}
+                  whileHover={{ scale: 1.07, boxShadow: "0 0 28px rgba(245,166,35,0.55)" }}
+                  whileTap={{ scale: 0.9 }}
+                  aria-label={playing ? "Pause" : "Play"}
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.span
+                      key={playing ? "p" : "r"}
+                      initial={{ scale: 0.4, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.4, opacity: 0 }}
+                      transition={{ duration: 0.12 }}
+                    >
+                      {playing ? <Pause /> : <Play />}
+                    </motion.span>
+                  </AnimatePresence>
+                </motion.button>
+
+                {/* Next */}
+                <button
+                  onClick={() => {
+                    setIdx((i) => (i + 1) % tracks.length);
+                    setPlaying(true);
+                  }}
+                  className="flex items-center justify-center rounded-full transition-all"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    color: "rgba(184,134,11,0.7)",
+                    background: "transparent",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.color = "#f5a623";
+                    (e.currentTarget as HTMLElement).style.background =
+                      "rgba(255,255,255,0.06)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.color =
+                      "rgba(184,134,11,0.7)";
+                    (e.currentTarget as HTMLElement).style.background =
+                      "transparent";
+                  }}
+                  aria-label="Next"
+                >
+                  <Next />
+                </button>
+              </div>
+
+              {/* ── Divider ── */}
               <div
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  background:
-                    "radial-gradient(circle at 35% 35%, #3d2b00, #1a120b)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
+                  width: 1,
+                  height: 40,
+                  background: "rgba(255,255,255,0.07)",
+                  flexShrink: 0,
                 }}
-              >
-                🎵
-              </div>
-            )}
-          </motion.div>
+              />
 
-          {/* ── Track info + seek ── */}
-          <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-            {/* Title */}
-            <AnimatePresence mode="wait">
-              <motion.h2
-                key={`t${idx}`}
+              {/* ── Song list toggle ── */}
+              <button
+                onClick={() => setShowList((s) => !s)}
+                className="music-player-list-toggle flex items-center justify-center rounded-full transition-all flex-shrink-0"
                 style={{
-                  fontSize: "clamp(14px,2vw,18px)",
-                  fontWeight: 700,
-                  color: "#fff9f0",
-                  fontFamily: "auto",
-                  letterSpacing: "0.01em",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  lineHeight: 1.2,
+                  width: 36,
+                  height: 36,
+                  color: showList ? "#f5a623" : "rgba(184,134,11,0.6)",
+                  background: showList ? "rgba(245,166,35,0.08)" : "transparent",
+                  border: showList
+                    ? "1px solid rgba(245,166,35,0.3)"
+                    : "1px solid transparent",
                 }}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -6 }}
-                transition={{ duration: 0.18 }}
-              >
-                {track?.title ?? "—"}
-              </motion.h2>
-            </AnimatePresence>
-
-            {/* Artist */}
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={`a${idx}`}
-                style={{
-                  fontSize: 11,
-                  letterSpacing: "0.12em",
-                  color: "#b8860b",
-                  fontFamily: "auto",
-                  fontWeight: 600,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                onMouseEnter={(e) => {
+                  if (!showList) {
+                    (e.currentTarget as HTMLElement).style.color = "#f5a623";
+                    (e.currentTarget as HTMLElement).style.background =
+                      "rgba(255,255,255,0.06)";
+                  }
                 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
+                onMouseLeave={(e) => {
+                  if (!showList) {
+                    (e.currentTarget as HTMLElement).style.color =
+                      "rgba(184,134,11,0.6)";
+                    (e.currentTarget as HTMLElement).style.background =
+                      "transparent";
+                  }
+                }}
+                aria-label="Toggle song list"
               >
-                {track?.artist ?? "—"}
-              </motion.p>
-            </AnimatePresence>
+                <ListIcon />
+              </button>
 
-            {/* Seek bar + time */}
-            <div className="flex items-center gap-2 mt-1.5">
-              <span
-                style={{
-                  fontSize: 10,
-                  color: "rgba(255,249,240,0.45)",
-                  fontFamily: "auto",
-                  minWidth: 28,
-                } as React.CSSProperties}
-              >
-                {fmt(currentTime)}
-              </span>
-              <div className="flex-1">
-                <SeekBar
-                  current={currentTime}
-                  duration={duration}
-                  onSeek={handleSeek}
-                />
-              </div>
-              <span
-                style={{
-                  fontSize: 10,
-                  color: "rgba(255,249,240,0.45)",
-                  fontFamily: "auto",
-                  minWidth: 28,
-                  textAlign: "right",
-                } as React.CSSProperties}
-              >
-                {fmt(duration)}
-              </span>
+              {/* ── Volume knob ── */}
+                {/* ── Volume ── */}
+<div className="music-player-volume volume-desktop-only">
+  <VolumeKnob volume={volume} onChange={setVolume} />
+</div>
+<div className="music-player-volume volume-mobile-only">
+  <MobileVolumeLantern volume={volume} onChange={setVolume} />
+</div>
             </div>
           </div>
-
-          {/* ── Controls ── */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Prev */}
-            <button
-              onClick={() => {
-                setIdx((i) => (i - 1 + tracks.length) % tracks.length);
-                setPlaying(true);
-              }}
-              className="flex items-center justify-center rounded-full transition-all"
-              style={{
-                width: 36,
-                height: 36,
-                color: "rgba(184,134,11,0.7)",
-                background: "transparent",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "#f5a623";
-                (e.currentTarget as HTMLElement).style.background =
-                  "rgba(255,255,255,0.06)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color =
-                  "rgba(184,134,11,0.7)";
-                (e.currentTarget as HTMLElement).style.background =
-                  "transparent";
-              }}
-              aria-label="Previous"
-            >
-              <Prev />
-            </button>
-
-            {/* Play / Pause — gold ring circle */}
-            <motion.button
-              onClick={toggle}
-              className="flex items-center justify-center rounded-full flex-shrink-0"
-              style={{
-                width: 52,
-                height: 52,
-                border: "1.5px solid #f5a623",
-                color: "#f5a623",
-                background: playing
-                  ? "rgba(245,166,35,0.08)"
-                  : "transparent",
-                boxShadow: playing
-                  ? "0 0 20px rgba(245,166,35,0.4)"
-                  : "0 0 8px rgba(245,166,35,0.15)",
-                transition: "background 0.3s, box-shadow 0.3s",
-              }}
-              whileHover={{ scale: 1.07, boxShadow: "0 0 28px rgba(245,166,35,0.55)" }}
-              whileTap={{ scale: 0.9 }}
-              aria-label={playing ? "Pause" : "Play"}
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                  key={playing ? "p" : "r"}
-                  initial={{ scale: 0.4, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.4, opacity: 0 }}
-                  transition={{ duration: 0.12 }}
-                >
-                  {playing ? <Pause /> : <Play />}
-                </motion.span>
-              </AnimatePresence>
-            </motion.button>
-
-            {/* Next */}
-            <button
-              onClick={() => {
-                setIdx((i) => (i + 1) % tracks.length);
-                setPlaying(true);
-              }}
-              className="flex items-center justify-center rounded-full transition-all"
-              style={{
-                width: 36,
-                height: 36,
-                color: "rgba(184,134,11,0.7)",
-                background: "transparent",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "#f5a623";
-                (e.currentTarget as HTMLElement).style.background =
-                  "rgba(255,255,255,0.06)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color =
-                  "rgba(184,134,11,0.7)";
-                (e.currentTarget as HTMLElement).style.background =
-                  "transparent";
-              }}
-              aria-label="Next"
-            >
-              <Next />
-            </button>
-          </div>
-
-          {/* ── Divider ── */}
-          <div
-            style={{
-              width: 1,
-              height: 40,
-              background: "rgba(255,255,255,0.07)",
-              flexShrink: 0,
-            }}
-          />
-
-          {/* ── Song list toggle ── */}
-          <button
-            onClick={() => setShowList((s) => !s)}
-            className="flex items-center justify-center rounded-full transition-all flex-shrink-0"
-            style={{
-              width: 36,
-              height: 36,
-              color: showList ? "#f5a623" : "rgba(184,134,11,0.6)",
-              background: showList ? "rgba(245,166,35,0.08)" : "transparent",
-              border: showList
-                ? "1px solid rgba(245,166,35,0.3)"
-                : "1px solid transparent",
-            }}
-            onMouseEnter={(e) => {
-              if (!showList) {
-                (e.currentTarget as HTMLElement).style.color = "#f5a623";
-                (e.currentTarget as HTMLElement).style.background =
-                  "rgba(255,255,255,0.06)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!showList) {
-                (e.currentTarget as HTMLElement).style.color =
-                  "rgba(184,134,11,0.6)";
-                (e.currentTarget as HTMLElement).style.background =
-                  "transparent";
-              }
-            }}
-            aria-label="Toggle song list"
-          >
-            <ListIcon />
-          </button>
-
-          {/* ── Volume knob ── */}
-          <VolumeKnob volume={volume} onChange={setVolume} />
-        </div>
-      </motion.div>
-    )}
+        </motion.div>
+      )}
     </>
   );
 }
