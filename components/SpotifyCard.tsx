@@ -941,21 +941,7 @@ export default function MusicPlayer() {
     setShowList(false);
   };
 
-  /* ── Render loading / error states ── */
-  if (loading) {
-    return (
-      <motion.div
-        className="fixed left-1/2 z-[60] -translate-x-1/2"
-        style={{ bottom: 100, width: "min(860px, 94vw)" }}
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <LoadingSkeleton />
-      </motion.div>
-    );
-  }
-
+  
 
   return (
     <>
@@ -965,6 +951,18 @@ export default function MusicPlayer() {
         style={{ position: "fixed", top: -2000, left: -2000, width: 200, height: 200, pointerEvents: "none" }}
         aria-hidden
       />
+
+      {loading ? (
+      <motion.div
+        className="fixed left-1/2 z-[60] -translate-x-1/2"
+        style={{ bottom: 100, width: "min(860px, 94vw)" }}
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <LoadingSkeleton />
+      </motion.div>
+    ) : (
 
       <motion.div
         className="fixed left-1/2 z-[60] -translate-x-1/2"
@@ -1272,6 +1270,7 @@ export default function MusicPlayer() {
           <VolumeKnob volume={volume} onChange={setVolume} />
         </div>
       </motion.div>
+    )}
     </>
   );
 }
