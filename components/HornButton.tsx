@@ -64,7 +64,13 @@ export default function HornButton() {
   }
 
   return (
-    <div className="fixed bottom-30 right-[-16px] z-50 pointer-events-auto" style={{ isolation: "isolate", transform: "rotate(180deg)" }}>
+    <div className="fixed
+    bottom-[30rem]
+    sm:bottom-10
+    md:bottom-30
+    right-[-16px]
+    z-50
+    pointer-events-auto" style={{ isolation: "isolate", transform: "rotate(180deg)" }}>
       {/* Ripple origin */}
       <div ref={rippleRef} className="absolute inset-0 overflow-visible" aria-hidden="true" />
 
