@@ -631,6 +631,7 @@ export default function MusicPlayer() {
   const [ytReady, setYtReady] = useState(
     () => typeof window !== "undefined" && !!window.YT?.Player
   );
+  const [ytApiFailed, setYtApiFailed] = useState(false);
   // The player object exists as soon as it's constructed, but calling
   // playVideo/cueVideoById before its internal onReady fires gets silently
   // dropped (not queued) — every playback command must wait on this flag.
@@ -638,9 +639,12 @@ export default function MusicPlayer() {
 
   const track = tracks[idx] ?? null;
   // Priority: self-hosted file > full-length YouTube match > Spotify 30s preview.
+  // If the YouTube IFrame API never responds, stop waiting and fall back to a
+  // playable local/preview source instead of leaving visitors stuck on a dead
+  // player for the whole page lifetime.
   const engine: "audio" | "youtube" | null = track?.src
     ? "audio"
-    : track?.youtubeId
+    : track?.youtubeId && !ytApiFailed
     ? "youtube"
     : track?.previewUrl
     ? "audio"
@@ -677,27 +681,44 @@ export default function MusicPlayer() {
   useEffect(() => {
     if (window.YT?.Player) {
       console.log("[MusicPlayer] YT API already present on window");
+      setYtApiFailed(false);
+      setYtReady(true);
       return;
     }
     console.log("[MusicPlayer] injecting YouTube iframe_api script");
     const prevCallback = window.onYouTubeIframeAPIReady;
+    const timeoutId = window.setTimeout(() => {
+      if (!window.YT?.Player) {
+        console.warn("[MusicPlayer] YT API did not respond in time; falling back to local/preview audio instead of waiting forever");
+        setYtApiFailed(true);
+        setYtReady(false);
+      }
+    }, 8000);
     window.onYouTubeIframeAPIReady = () => {
       console.log("[MusicPlayer] onYouTubeIframeAPIReady fired — YT script loaded");
       prevCallback?.();
+      setYtApiFailed(false);
       setYtReady(true);
+      window.clearTimeout(timeoutId);
     };
     if (!document.getElementById("youtube-iframe-api")) {
       const tag = document.createElement("script");
       tag.id = "youtube-iframe-api";
       tag.src = "https://www.youtube.com/iframe_api";
-      tag.onerror = () => console.error("[MusicPlayer] FAILED to load https://www.youtube.com/iframe_api — check network tab / ad-blocker");
+      tag.onerror = () => {
+        console.error("[MusicPlayer] FAILED to load https://www.youtube.com/iframe_api — check network tab / ad-blocker");
+        setYtApiFailed(true);
+        setYtReady(false);
+        window.clearTimeout(timeoutId);
+      };
       document.head.appendChild(tag);
     }
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   /* ── Create the hidden YouTube player once the API is ready ── */
   useEffect(() => {
-    if (!ytReady) return;
+    if (!ytReady || ytApiFailed) return;
     if (ytPlayerRef.current) {
       // A dev hot-reload can reset this component's state (ytPlayerReady)
       // while the actual player instance survives untouched — onReady won't
@@ -742,7 +763,7 @@ export default function MusicPlayer() {
       },
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ytReady, ytPlayerReady]);
+  }, [ytReady, ytPlayerReady, ytApiFailed]);
 
   /* ── Load the current track into whichever engine plays it ── */
   useEffect(() => {
@@ -877,9 +898,9 @@ export default function MusicPlayer() {
     } else if (engine === "youtube") {
       const p = ytPlayerRef.current;
       if (!p || !ytPlayerReady) {
-        console.warn("[MusicPlayer] toggle: YT player not ready yet, remembering intent");
-        // Not ready yet — remember the intent; the track-load effect acts
-        // on it as soon as ytPlayerReady flips true.
+        console.warn("[MusicPlayer] toggle: YT player not ready yet, remembering intent for the next ready callback");
+        // Keep the play/pause intent while the iframe API settles; if it never
+        // comes back, the loader above falls back to preview/audio playback.
         setPlaying((v) => !v);
         return;
       }
