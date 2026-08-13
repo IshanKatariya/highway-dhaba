@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
+import { transform } from "next/dist/build/swc";
 
 export default function HornButton() {
   const rippleRef = useRef<HTMLDivElement>(null);
@@ -82,7 +83,8 @@ export default function HornButton() {
           transition: { duration: 0.6, repeat: Infinity, ease: "easeInOut" },
         }}
       >
-        <span style={{ fontSize: "60px", lineHeight: 1 }}>📯</span>
+        <span style={{ fontSize: "60px", lineHeight: 1, transform: "rotate(271deg)" }}>📯</span>
+
       </motion.button>
     </div>
   );

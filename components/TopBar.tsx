@@ -18,7 +18,7 @@ function LiveListenerCount() {
   return (
     <div
       className="flex items-center gap-2 text-[11px] uppercase tracking-[0.4em] text-white/85"
-      style={{ fontFamily: "var(--font-baloo)" }}
+      style={{ fontFamily: "auto" }}
       aria-live="polite"
     >
       <span className="relative inline-flex h-2 w-2 flex-shrink-0 rounded-full bg-[#F5A623]">

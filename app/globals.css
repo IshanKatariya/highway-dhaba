@@ -20,7 +20,7 @@
 
   --font-display: var(--font-yatra);
   --font-stencil: var(--font-russo);
-  --font-body: var(--font-baloo);
+  --font-body: auto;
 }
 
 :root {
