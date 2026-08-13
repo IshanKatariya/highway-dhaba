@@ -38,7 +38,7 @@ export default function TopBar() {
 
       <div className="pointer-events-auto">
         <Link
-          href="https://open.spotify.com/playlist/3MyIslcGZuEMYMhOPmKBcg?si=aedafa58250e4002"
+          href="https://open.spotify.com/playlist/3MyIslcGZuEMYMhOPmKBcg"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.36em] text-white/80 transition-colors duration-200 hover:text-[#F5A623]"
