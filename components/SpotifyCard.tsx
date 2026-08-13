@@ -1190,7 +1190,7 @@ export default function MusicPlayer() {
           }
           .music-player-pill {
             display: grid !important;
-            grid-template-columns: 50px minmax(0, 1fr) !important;
+            grid-template-columns: 65px minmax(0, 1fr) !important;
             grid-template-rows: auto auto !important;
             column-gap: 10px !important;
             row-gap: 8px !important;
