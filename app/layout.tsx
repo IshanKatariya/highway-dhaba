@@ -58,6 +58,7 @@ export default function RootLayout({
         className={`${yatraOne.variable} ${baloo2.variable} ${russoOne.variable} min-h-full`}
       >
         {children}
+          <Analytics />
       </body>
     </html>
   );
