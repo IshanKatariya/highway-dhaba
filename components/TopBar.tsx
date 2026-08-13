@@ -24,7 +24,7 @@ function LiveListenerCount() {
       <span className="relative inline-flex h-2 w-2 flex-shrink-0 rounded-full bg-[#F5A623]">
         <span className="absolute inset-0 rounded-full bg-[#F5A623] opacity-60 animate-ping-dot" />
       </span>
-      <span>{count} on the highway</span>
+      <span style={{ fontFamily: "var(--font-russo)" }}>{count} on the highway</span>
     </div>
   );
 }
