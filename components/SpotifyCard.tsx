@@ -790,9 +790,13 @@ export default function MusicPlayer() {
       return () => window.clearTimeout(watchdog);
     } else if (engine === "youtube") {
       const p = ytPlayerRef.current;
-      if (!p || !track.youtubeId || !ytPlayerReady || typeof p.loadVideoById !== "function") {
-        console.warn("[MusicPlayer] youtube engine but not ready to load:", { hasPlayer: !!p, youtubeId: track.youtubeId, ytPlayerReady });
+      if (!p || !track.youtubeId || typeof p.loadVideoById !== "function") {
+        console.warn("[MusicPlayer] youtube engine missing player methods:", { hasPlayer: !!p, youtubeId: track.youtubeId, ytPlayerReady });
         return;
+      }
+      if (!ytPlayerReady) {
+        console.warn("[MusicPlayer] youtube engine not ready; forcing load anyway to avoid the 0:00 stall", { youtubeId: track.youtubeId });
+        setYtPlayerReady(true);
       }
       p.unMute?.();
       console.log("[MusicPlayer] calling", playing ? "loadVideoById" : "cueVideoById", track.youtubeId, "isMuted:", p.isMuted?.());
@@ -897,15 +901,20 @@ export default function MusicPlayer() {
       else a.play().catch((err) => { console.error("[MusicPlayer] toggle audio.play() rejected:", err); setPlaying(false); });
     } else if (engine === "youtube") {
       const p = ytPlayerRef.current;
-      if (!p || !ytPlayerReady) {
-        console.warn("[MusicPlayer] toggle: YT player not ready yet, remembering intent for the next ready callback");
-        // Keep the play/pause intent while the iframe API settles; if it never
-        // comes back, the loader above falls back to preview/audio playback.
+      if (!p || typeof p.playVideo !== "function") {
+        console.warn("[MusicPlayer] toggle: YT player is unavailable right now, keeping the intent for the next attempt");
         setPlaying((v) => !v);
         return;
       }
       if (playing) p.pauseVideo?.();
-      else { p.unMute?.(); p.playVideo?.(); }
+      else {
+        if (!ytPlayerReady) {
+          console.warn("[MusicPlayer] toggle: YT player not ready, forcing play attempt anyway");
+          setYtPlayerReady(true);
+        }
+        p.unMute?.();
+        p.playVideo?.();
+      }
     } else {
       console.warn("[MusicPlayer] toggle: no engine available for this track (no src/youtubeId/previewUrl)");
     }
