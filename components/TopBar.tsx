@@ -7,7 +7,7 @@ function LiveListenerCount() {
   const [count, setCount] = useState(42);
 
   useEffect(() => {
-    const initial = 34 + Math.floor(Math.random() * 24);
+    const initial = 11 + Math.floor(Math.random() * 24);
     setCount(initial);
     const id = setInterval(() => {
       setCount((value) => Math.max(18, value + (Math.random() > 0.5 ? 1 : -1)));
