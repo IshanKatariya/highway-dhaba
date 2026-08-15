@@ -52,7 +52,18 @@ export default function HeroTitle() {
       >
         HIGHWAY DHABA
       </motion.p>
+      
+      <motion.p
+        variants={itemVariants}
+        className="uppercase tracking-[0.35em] text-white/80"
+        style={{
+          fontFamily: "Yatra One",
+          fontSize: "10px",
 
+        }}
+      >
+        <a href="https://www.linkedin.com/in/ishan-kataria-268b8534a/">- ISHAN KATARIA</a>
+      </motion.p>
 
     </motion.div>
   );
