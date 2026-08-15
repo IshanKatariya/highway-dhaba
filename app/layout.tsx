@@ -38,6 +38,10 @@ export const metadata: Metadata = {
 
   keywords: [
     "Highway Dhaba",
+    "Highway Dhaba music website",
+    "Highway Dhaba songs",
+    "Highway Dhaba songs online",
+    "Highway Dhaba songs website",
     "Highway Dhaba website",
     "Highway Dhaba music",
     "desi songs",
